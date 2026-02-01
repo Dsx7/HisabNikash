@@ -151,8 +151,4 @@ Run the project locally in just a few steps.
   <p>
     Give a ⭐️ if you like this project!
   </p>
-<<<<<<< HEAD
 </div>
-=======
-</div>
->>>>>>> b2ab09e6be023670e79487beddba1639405a7279
