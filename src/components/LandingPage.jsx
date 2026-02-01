@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { ModeToggle } from '@/components/ModeToggle';
 
-export default function LandingPage({ onLogin }) {
+export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 overflow-x-hidden selection:bg-indigo-500/30">
       
@@ -31,9 +31,12 @@ export default function LandingPage({ onLogin }) {
           
           <div className="flex gap-4 items-center">
             <ModeToggle />
-            <Button onClick={onLogin} className="rounded-full px-6 font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
-              Login / Sign Up
-            </Button>
+            {/* LINK TO LOGIN PAGE */}
+            <Link href="/login">
+              <Button className="rounded-full px-6 font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
+                Login / Sign Up
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>
@@ -49,27 +52,31 @@ export default function LandingPage({ onLogin }) {
           
           {/* Badge */}
           <Badge variant="secondary" className="mb-6 py-1.5 px-4 text-sm border-indigo-500/20 bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 font-medium rounded-full">
-             ✨ AI Powered Finance Tracker
+              ✨ AI Powered Finance Tracker
           </Badge>
 
           {/* Headline */}
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-tight">
-            টাকা পয়সার হিসাব রাখুন <br/> 
+            টাকা পয়সার হিসাব রাখুন <br/> 
             <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-              শুধুমাত্র ভয়েস কমান্ডে
+              শুধুমাত্র ভয়েস কমান্ডে
             </span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            টাইপ করার ঝামেলা শেষ। বাংলায় বলুন <strong>"১০০ টাকা রিকশা ভাড়া"</strong>, আর আমাদের AI অটোমেটিক সব হিসাব সেভ করে নিবে।
+            টাইপ করার ঝামেলা শেষ। বাংলায় বলুন <strong>"১০০ টাকা রিকশা ভাড়া"</strong>, আর আমাদের AI অটোমেটিক সব হিসাব সেভ করে নিবে।
           </p>
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" onClick={onLogin} className="h-14 px-8 text-lg rounded-full w-full sm:w-auto shadow-xl shadow-primary/25 hover:scale-105 transition-transform bg-primary hover:bg-primary/90">
-              Start for Free <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
+            {/* LINK TO REGISTER PAGE */}
+            <Link href="/register" className="w-full sm:w-auto">
+              <Button size="lg" className="h-14 px-8 text-lg rounded-full w-full shadow-xl shadow-primary/25 hover:scale-105 transition-transform bg-primary hover:bg-primary/90">
+                Start for Free <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            
             <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full w-full sm:w-auto hover:bg-muted/50 border-primary/20">
               Watch Demo
             </Button>
@@ -97,9 +104,9 @@ export default function LandingPage({ onLogin }) {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   {[
-                      { icon: Mic, title: "1. Speak", desc: "মাইক বাটনে চাপ দিয়ে বাংলায় বলুন আপনার খরচের কথা।" },
+                      { icon: Mic, title: "1. Speak", desc: "মাইক বাটনে চাপ দিয়ে বাংলায় বলুন আপনার খরচের কথা।" },
                       { icon: Zap, title: "2. AI Processing", desc: "আমাদের স্মার্ট AI আপনার কথা বুঝে নাম, টাকা এবং ক্যাটাগরি আলাদা করবে।" },
-                      { icon: PieChart, title: "3. Track & Grow", desc: "ড্যাশবোর্ডে দেখুন আপনার টাকা কোথায় খরচ হচ্ছে এবং সঞ্চয় বাড়ান।" }
+                      { icon: PieChart, title: "3. Track & Grow", desc: "ড্যাশবোর্ডে দেখুন আপনার টাকা কোথায় খরচ হচ্ছে এবং সঞ্চয় বাড়ান।" }
                   ].map((step, idx) => (
                       <div key={idx} className="relative p-8 bg-card border border-border/50 rounded-2xl shadow-sm hover:shadow-lg hover:border-primary/20 transition-all text-center group">
                           <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
@@ -130,7 +137,7 @@ export default function LandingPage({ onLogin }) {
                         </div>
                         <h3 className="text-2xl font-bold mb-2">Bangla Voice Recognition</h3>
                         <p className="text-muted-foreground">
-                            বিশ্বসেরা Gemini এবং ChatGPT হাইব্রিড ইঞ্জিন ব্যবহার করে আমরা দিচ্ছি ৯৯% নির্ভুল বাংলা ভয়েস টাইপিং সুবিধা। আঞ্চলিক টান থাকলেও সমস্যা নেই!
+                            বিশ্বসেরা Gemini এবং ChatGPT হাইব্রিড ইঞ্জিন ব্যবহার করে আমরা দিচ্ছি ৯৯% নির্ভুল বাংলা ভয়েস টাইপিং সুবিধা। আঞ্চলিক টান থাকলেও সমস্যা নেই!
                         </p>
                     </div>
                     <div className="flex-1 w-full bg-background/60 backdrop-blur-sm p-4 rounded-xl border border-dashed border-indigo-300 dark:border-indigo-700">
@@ -150,7 +157,7 @@ export default function LandingPage({ onLogin }) {
                         <ShieldCheck />
                     </div>
                     <h3 className="text-xl font-bold mb-2">Lend & Borrow</h3>
-                    <p className="text-muted-foreground">কে কত টাকা পাবে বা কাকে কত টাকা দিতে হবে, সব মনে রাখার দায়িত্ব আমাদের।</p>
+                    <p className="text-muted-foreground">কে কত টাকা পাবে বা কাকে কত টাকা দিতে হবে, সব মনে রাখার দায়িত্ব আমাদের।</p>
                 </CardContent>
             </Card>
 
@@ -158,10 +165,10 @@ export default function LandingPage({ onLogin }) {
             <Card className="bg-card hover:bg-muted/50 transition-colors border-border/60">
                 <CardContent className="p-8">
                     <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg flex items-center justify-center mb-4">
-                         <PieChart />
+                          <PieChart />
                     </div>
                     <h3 className="text-xl font-bold mb-2">Visual Analytics</h3>
-                    <p className="text-muted-foreground">পাই চার্ট এবং গ্রাফের মাধ্যমে দেখুন মাসের শেষে আপনার টাকা কোথায় হাওয়া হয়ে যাচ্ছে।</p>
+                    <p className="text-muted-foreground">পাই চার্ট এবং গ্রাফের মাধ্যমে দেখুন মাসের শেষে আপনার টাকা কোথায় হাওয়া হয়ে যাচ্ছে।</p>
                 </CardContent>
             </Card>
 
@@ -173,7 +180,7 @@ export default function LandingPage({ onLogin }) {
                             <Globe />
                         </div>
                         <h3 className="text-xl font-bold mb-2">Anywhere Access</h3>
-                        <p className="text-muted-foreground">মোবাইল, ল্যাপটপ বা ট্যাবলেট - সব জায়গা থেকে আপনার হিসাবে অ্যাক্সেস করুন। ডাটা ক্লাউডে সুরক্ষিত থাকে।</p>
+                        <p className="text-muted-foreground">মোবাইল, ল্যাপটপ বা ট্যাবলেট - সব জায়গা থেকে আপনার হিসাবে অ্যাক্সেস করুন। ডাটা ক্লাউডে সুরক্ষিত থাকে।</p>
                     </div>
                 </CardContent>
             </Card>
@@ -186,9 +193,9 @@ export default function LandingPage({ onLogin }) {
             <h2 className="text-3xl font-bold mb-12">ব্যবহারকারীরা কী বলছেন?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { name: "Rahim Ahmed", role: "Small Business Owner", comment: "আগে খাতা-কলমে হিসাব রাখতাম, এখন মুখে বললেই সব সেভ হয়ে যায়। অসাধারণ অ্যাপ!" },
+                    { name: "Rahim Ahmed", role: "Small Business Owner", comment: "আগে খাতা-কলমে হিসাব রাখতাম, এখন মুখে বললেই সব সেভ হয়ে যায়। অসাধারণ অ্যাপ!" },
                     { name: "Fatima Begum", role: "Student", comment: "মেসের খরচের হিসাব রাখা এখন খুব সহজ। কে কত টাকা পাবে সব এখানে থাকে।" },
-                    { name: "Tanvir Hasan", role: "Freelancer", comment: "ডার্ক মোড আর চার্ট ফিচারটা আমার খুব প্রিয়। এক্সেল শিট ডাউনলোড করা যায়, এটাই সেরা।" }
+                    { name: "Tanvir Hasan", role: "Freelancer", comment: "ডার্ক মোড আর চার্ট ফিচারটা আমার খুব প্রিয়। এক্সেল শিট ডাউনলোড করা যায়, এটাই সেরা।" }
                 ].map((user, idx) => (
                     <Card key={idx} className="bg-background border-border/50 shadow-sm hover:shadow-md transition-shadow">
                         <CardContent className="p-6 text-left">
@@ -218,8 +225,8 @@ export default function LandingPage({ onLogin }) {
           <div className="space-y-4">
               {[
                   { q: "এটা কি সম্পূর্ণ ফ্রি?", a: "হ্যাঁ! ব্যক্তিগত ব্যবহারের জন্য HisabNikash সম্পূর্ণ ফ্রি।" },
-                  { q: "আমার ডাটা কি সুরক্ষিত?", a: "অবশ্যই। আমরা ইন্ডাস্ট্রি স্ট্যান্ডার্ড এনক্রিপশন ব্যবহার করি এবং আপনার ডাটা কারো সাথে শেয়ার করি না।" },
-                  { q: "ইন্টারনেট ছাড়া কি চলবে?", a: "বর্তমানে ডাটা সেভ করার জন্য ইন্টারনেটের প্রয়োজন।" }
+                  { q: "আমার ডাটা কি সুরক্ষিত?", a: "অবশ্যই। আমরা ইন্ডাস্ট্রি স্ট্যান্ডার্ড এনক্রিপশন ব্যবহার করি এবং আপনার ডাটা কারো সাথে শেয়ার করি না।" },
+                  { q: "ইন্টারনেট ছাড়া কি চলবে?", a: "বর্তমানে ডাটা সেভ করার জন্য ইন্টারনেটের প্রয়োজন।" }
               ].map((faq, idx) => (
                   <Card key={idx} className="border-border/50">
                       <CardContent className="p-6">
@@ -241,16 +248,18 @@ export default function LandingPage({ onLogin }) {
           <div className="relative z-10">
             <h2 className="text-3xl md:text-5xl font-extrabold mb-6">আজই হিসাব রাখা শুরু করুন</h2>
             <p className="text-lg md:text-xl opacity-90 mb-10 max-w-2xl mx-auto text-primary-foreground/80">
-                দেরি না করে জয়েন করুন বাংলাদেশের সবচেয়ে স্মার্ট পার্সোনাল ফাইন্যান্স প্ল্যাটফর্মে।
+                দেরি না করে জয়েন করুন বাংলাদেশের সবচেয়ে স্মার্ট পার্সোনাল ফাইন্যান্স প্ল্যাটফর্মে।
             </p>
-            <Button 
-                size="lg" 
-                variant="secondary" 
-                onClick={onLogin} 
-                className="h-16 px-10 text-xl rounded-full text-primary font-bold hover:scale-105 transition-transform shadow-2xl"
-            >
-                Join Now with Google
-            </Button>
+            {/* LINK TO REGISTER PAGE */}
+            <Link href="/register">
+                <Button 
+                    size="lg" 
+                    variant="secondary" 
+                    className="h-16 px-10 text-xl rounded-full text-primary font-bold hover:scale-105 transition-transform shadow-2xl"
+                >
+                    Create Account
+                </Button>
+            </Link>
           </div>
       </section>
 
@@ -260,10 +269,10 @@ export default function LandingPage({ onLogin }) {
             <p>&copy; 2026 HisabNikash. Built with ❤️ in Bangladesh.</p>
             <div className="flex gap-6">
                 <Link href="/privacy" className="hover:underline hover:text-primary">Privacy Policy</Link>
-  <span>•</span>
-  <Link href="/terms" className="hover:underline hover:text-primary">Terms</Link>
-  <span>•</span>
-  <Link href="/contact" className="hover:underline hover:text-primary">Contact</Link>
+                <span>•</span>
+                <Link href="/terms" className="hover:underline hover:text-primary">Terms</Link>
+                <span>•</span>
+                <Link href="/contact" className="hover:underline hover:text-primary">Contact</Link>
             </div>
         </div>
       </footer>

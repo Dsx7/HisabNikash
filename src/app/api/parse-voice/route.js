@@ -7,61 +7,84 @@ const wordToNumberMap = {
   'ত্রিশ': 30, 'চলিশ': 40, 'পঞ্চাশ': 50, 'ষাট': 60, 'সত্তর': 70, 'আশি': 80, 'নব্বই': 90,
   // Multipliers
   'শ': 100, 'শত': 100, 'একশ': 100, 'দুইশ': 200, 'পাঁচশ': 500, 
-  'হাজার': 1000,
+  'হাজার': 1000, 'লাখ': 100000, 'কটি': 10000000, 'কোটি': 10000000, 
+  'k': 1000, 
   // বাংলা ডিজিট
   '০': 0, '১': 1, '২': 2, '৩': 3, '৪': 4, '৫': 5, '৬': 6, '৭': 7, '৮': 8, '৯': 9
 };
 
-// স্ট্রিং থেকে সংখ্যা বের করার ফাংশন (FIXED for Multipliers)
+// স্ট্রিং থেকে সংখ্যা বের করার স্মার্ট ফাংশন
 function extractAmount(text) {
-  let amount = 0;
+  let maxAmount = 0;
   
-  // ধাপ ১: বাংলা ডিজিট থাকলে ইংরেজিতে কনভার্ট করা
+  // ধাপ ১: বাংলা ডিজিট থাকলে ইংরেজিতে কনভার্ট করা (২০ -> 20)
   let processedText = text.replace(/[০-৯]/g, (d) => wordToNumberMap[d]);
 
-  // ধাপ ২: কথায় লেখা সংখ্যা চেক করা (With Multiplier Logic)
-  const words = processedText.split(/\s+/);
+  // ধাপ ২: টেক্সটকে শব্দে ভাগ করা
+  const words = processedText.replace(/,/g, '').split(/\s+/);
   
   for (let i = 0; i < words.length; i++) {
-    const word = words[i];
-    const val = wordToNumberMap[word];
-
-    if (val) {
-        // লজিক: যদি শব্দটি 'হাজার' বা 'শ' হয়
-        if (val === 1000 || val === 100) {
-            // চেক করি এর আগের শব্দটি কোনো সংখ্যা ছিল কিনা (যেমন: "দুই" হাজার)
-            const prevWord = words[i-1];
-            const prevVal = wordToNumberMap[prevWord];
-
-            if (prevVal && prevVal < 100) {
-                // গুণ হবে: 2 * 1000 = 2000
-                const calculated = prevVal * val;
-                if (calculated > amount) amount = calculated;
-            } else {
-                // যদি আগে সংখ্যা না থাকে (যেমন শুধু বলল "হাজার টাকা"), তবে ডিফল্ট মান
-                if (val > amount) amount = val;
+    let word = words[i].toLowerCase();
+    
+    // ম্যাপ থেকে মান বের করার চেষ্টা
+    let val = wordToNumberMap[word];
+    
+    if (val === undefined) {
+        if (word.endsWith('k')) {
+            const numPart = parseFloat(word);
+            if (!isNaN(numPart)) {
+                val = numPart * 1000;
+                if (val > maxAmount) maxAmount = val;
+                continue;
             }
-        } 
-        // যদি এটি সাধারণ সংখ্যা হয় (১-৯৯) এবং এর পরে কোনো মাল্টিপ্লায়ার না থাকে
-        else {
-            // আমরা পরের শব্দটি চেক করব, যদি পরে 'হাজার' থাকে তাহলে এখন আপডেট করব না
-            const nextWord = words[i+1];
+        }
+        
+        if (!isNaN(word)) {
+            val = parseFloat(word);
+        }
+    }
+
+    // --- Multiplier Logic ---
+    if (val === 100 || val === 1000 || val === 100000 || val === 10000000) {
+        let prevVal = 1; 
+        
+        if (i > 0) {
+            const prevWord = words[i-1].toLowerCase();
+            if (wordToNumberMap[prevWord]) {
+                prevVal = wordToNumberMap[prevWord];
+            } 
+            else if (!isNaN(prevWord)) {
+                prevVal = parseFloat(prevWord);
+            }
+        }
+        
+        const currentChunk = prevVal * val;
+        
+        if (currentChunk > maxAmount) {
+            maxAmount = currentChunk;
+        }
+    } 
+    
+    // --- Normal Number Logic ---
+    else if (val !== undefined) {
+        let nextWordIsMultiplier = false;
+        if (i < words.length - 1) {
+            const nextWord = words[i+1].toLowerCase();
             const nextVal = wordToNumberMap[nextWord];
-            
-            if (nextVal !== 100 && nextVal !== 1000) {
-                if (val > amount) amount = val;
+            if (nextVal === 100 || nextVal === 1000 || nextVal === 100000 || nextVal === 10000000) {
+                nextWordIsMultiplier = true;
+            }
+        }
+
+        if (!nextWordIsMultiplier) {
+            if (val > maxAmount) {
+                maxAmount = val;
             }
         }
     }
   }
 
-  // ধাপ ৩: যদি টেক্সটে সরাসরি ইংরেজি ডিজিট (যেমন 2000) থাকে, সেটা সবার উপরে
-  const digitMatch = processedText.match(/(\d+)/);
-  if (digitMatch) {
-    amount = parseInt(digitMatch[0]);
-  }
-
-  return amount;
+  return maxAmount;
 }
 
 export async function POST(req) {
@@ -84,10 +107,41 @@ export async function POST(req) {
     
     const lowerText = text.toLowerCase();
 
-    // --- KEYWORD LOGIC ---
+    // --- KEYWORD LOGIC (Updated Order) ---
     
-    // LEND
+    // INCOME
     if (
+        lowerText.includes('পেলাম') || 
+        lowerText.includes('আয়') || 
+        lowerText.includes('আয়') || 
+        lowerText.includes('বেতন') || 
+        lowerText.includes('উপার্জন') || 
+        lowerText.includes('ইনকাম') || 
+        lowerText.includes('লাভ') || 
+        lowerText.includes('income') ||
+        lowerText.includes('salary')
+    ) {
+      type = 'INCOME';
+      category = 'Salary/Income';
+    }
+
+    // BORROW (Priority High): আমি দেবো / সে পাবে / আমার থেকে পাবে
+    // FIX: BORROW চেক আগে করছি যাতে 'পাবে' শব্দটিকে 'পাব' এর সাথে গুলিয়ে না ফেলে
+    else if (
+        lowerText.includes('নিব') || 
+        lowerText.includes('দিতে হবে') || 
+        lowerText.includes('দেবো') || 
+        lowerText.includes('ধার নিয়েছি') || 
+        lowerText.includes('পাবে') || // "সে পাবে" = BORROW
+        lowerText.includes('আমার থেকে') || // New: "আমার থেকে" usually implies money going out
+        lowerText.includes('ধার')
+    ) {
+      type = 'BORROW';
+      category = 'Loan Taken';
+    }
+
+    // LEND (Priority Lower): আমি পাব / সে দেবে
+    else if (
         lowerText.includes('পাব') ||    
         lowerText.includes('পাবো') || 
         lowerText.includes('দেবে') || 
@@ -98,35 +152,16 @@ export async function POST(req) {
       category = 'Loan Given';
     }
     
-    // BORROW
-    else if (
-        lowerText.includes('নিব') || 
-        lowerText.includes('দিতে হবে') || 
-        lowerText.includes('দেবো') || 
-        lowerText.includes('ধার নিয়েছি') || 
-        lowerText.includes('পাবে') || 
-        lowerText.includes('ধার')
-    ) {
-      type = 'BORROW';
-      category = 'Loan Taken';
-    }
-    
-    // INCOME
-    else if (lowerText.includes('পেলাম') || lowerText.includes('আয়') || lowerText.includes('বেতন') || lowerText.includes('income')) {
-      type = 'INCOME';
-      category = 'Salary/Income';
-    }
-    
     // EXPENSE
     else if (lowerText.includes('বাজার') || lowerText.includes('buy') || lowerText.includes('shop') || lowerText.includes('kinlam')) {
       type = 'EXPENSE';
       category = 'Shopping';
     } 
-    else if (lowerText.includes('ভাড়া') || lowerText.includes('rickshaw')) {
+    else if (lowerText.includes('ভাড়া') || lowerText.includes('rickshaw') || lowerText.includes('rent')) {
       type = 'EXPENSE';
       category = 'Transport';
     }
-    else if (lowerText.includes('খেলাম') || lowerText.includes('খাবার')) {
+    else if (lowerText.includes('খেলাম') || lowerText.includes('খাবার') || lowerText.includes('food')) {
       type = 'EXPENSE';
       category = 'Food';
     }
@@ -138,8 +173,9 @@ export async function POST(req) {
         'সে', 'তার', 'তাকে', 
         'থেকে', 'কাছে', 'সাথে', 'জন্য', 
         'টাকা', 'পয়সা', 
-        'দেবে', 'নিব', 'পাবো', 'পাব', 'পাবে', 'করলাম', 'দিতে', 'হবে', 'নিয়েছি', 'দিয়েছে', 'নিয়েছে', 'দেবো',
-        'বিশ', 'দশ', 'পঞ্চাশ', 'শ', 'হাজার', 'লাখ',
+        'দেবে', 'নিব', 'পাবো', 'পাব', 'পাবে', 'করলাম', 'দিতে', 'হবে', 'নিয়েছি', 'দিয়েছে', 'নিয়েছে', 'দেবো', 
+        'ইনকাম', 'আয়', 'বেতন', 
+        'বিশ', 'দশ', 'পঞ্চাশ', 'শ', 'হাজার', 'লাখ', 'কোটি', 'k',
         'এর', 'টি', 'টা', 'খানা', 'খানি' 
     ];
 
