@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import axios from 'axios';
+import HNLoader from '@/components/HNLoader'; // <--- New Import
 
 const AuthContext = createContext();
 
@@ -20,7 +21,7 @@ export const AuthProvider = ({ children }) => {
     const syncUserWithBackend = async (firebaseUser) => {
         try {
            // const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/sync`, {
-			   const res = await axios.post('/api/users/sync', {
+            const res = await axios.post('/api/users/sync', {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
                 displayName: firebaseUser.displayName,
@@ -54,6 +55,16 @@ export const AuthProvider = ({ children }) => {
         });
         return () => unsubscribe();
     }, []);
+
+    // --- UPDATED LOADING LOGIC ---
+    // If Firebase is checking auth status, show the HNLoader
+    if (loading) {
+        return (
+            <div className="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center bg-background">
+                <HNLoader size="text-8xl md:text-9xl" />
+            </div>
+        );
+    }
 
     return (
         <AuthContext.Provider value={{ user, dbUser, googleLogin, logout, loading }}>

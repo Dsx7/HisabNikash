@@ -1,3 +1,7 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import HNLoader from '@/components/HNLoader'; // Custom Loader
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -14,8 +18,30 @@ import {
 import { ModeToggle } from '@/components/ModeToggle';
 
 export default function LandingPage() {
+  // --- SPLASH SCREEN LOGIC ---
+  const [isMounting, setIsMounting] = useState(true);
+
+  useEffect(() => {
+    // পেজ লোড হওয়ার পর ১.৫ সেকেন্ড লোডার দেখাবে
+    const timer = setTimeout(() => {
+      setIsMounting(false);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // যদি মাউন্টিং হয়, তাহলে শুধু HNLoader দেখাবে
+  if (isMounting) {
+    return (
+      <div className="fixed inset-0 z-50 flex h-screen w-screen items-center justify-center bg-background">
+        <HNLoader size="text-8xl md:text-9xl" />
+      </div>
+    );
+  }
+
+  // --- MAIN CONTENT ---
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 overflow-x-hidden selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 overflow-x-hidden selection:bg-indigo-500/30 animate-in fade-in zoom-in duration-500">
       
       {/* --- NAVBAR --- */}
       <nav className="border-b border-border/40 bg-background/80 backdrop-blur-md sticky top-0 z-50">
@@ -31,7 +57,6 @@ export default function LandingPage() {
           
           <div className="flex gap-4 items-center">
             <ModeToggle />
-            {/* LINK TO LOGIN PAGE */}
             <Link href="/login">
               <Button className="rounded-full px-6 font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
                 Login / Sign Up
@@ -43,19 +68,15 @@ export default function LandingPage() {
 
       {/* --- HERO SECTION --- */}
       <section className="relative pt-20 pb-32 overflow-hidden">
-        {/* Updated Abstract Background Blobs (Indigo/Purple) */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[120px] -z-10 animate-pulse" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] -z-10" />
         <div className="absolute top-20 left-10 w-[200px] h-[200px] bg-blue-500/10 rounded-full blur-[80px] -z-10" />
 
         <div className="max-w-5xl mx-auto px-6 text-center">
-          
-          {/* Badge */}
           <Badge variant="secondary" className="mb-6 py-1.5 px-4 text-sm border-indigo-500/20 bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 font-medium rounded-full">
               ✨ AI Powered Finance Tracker
           </Badge>
 
-          {/* Headline */}
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-tight">
             টাকা পয়সার হিসাব রাখুন <br/> 
             <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
@@ -63,14 +84,11 @@ export default function LandingPage() {
             </span>
           </h1>
 
-          {/* Subheadline */}
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             টাইপ করার ঝামেলা শেষ। বাংলায় বলুন <strong>"১০০ টাকা রিকশা ভাড়া"</strong>, আর আমাদের AI অটোমেটিক সব হিসাব সেভ করে নিবে।
           </p>
 
-          {/* Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {/* LINK TO REGISTER PAGE */}
             <Link href="/register" className="w-full sm:w-auto">
               <Button size="lg" className="h-14 px-8 text-lg rounded-full w-full shadow-xl shadow-primary/25 hover:scale-105 transition-transform bg-primary hover:bg-primary/90">
                 Start for Free <ArrowRight className="ml-2 w-5 h-5" />
@@ -82,7 +100,6 @@ export default function LandingPage() {
             </Button>
           </div>
           
-          {/* Social Proof */}
           <div className="mt-12 flex items-center justify-center gap-6 text-sm text-muted-foreground">
              <div className="flex -space-x-2">
                 {[1,2,3,4].map(i => (
@@ -128,7 +145,6 @@ export default function LandingPage() {
          </div>
 
          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Feature 1 (Big) */}
             <Card className="md:col-span-2 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-900/20 border-indigo-100 dark:border-indigo-800/50">
                 <CardContent className="p-8 flex flex-col md:flex-row items-center gap-8">
                     <div className="flex-1 text-left">
@@ -150,7 +166,6 @@ export default function LandingPage() {
                 </CardContent>
             </Card>
 
-            {/* Feature 2 */}
             <Card className="bg-card hover:bg-muted/50 transition-colors border-border/60">
                 <CardContent className="p-8">
                     <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center mb-4">
@@ -161,7 +176,6 @@ export default function LandingPage() {
                 </CardContent>
             </Card>
 
-            {/* Feature 3 */}
             <Card className="bg-card hover:bg-muted/50 transition-colors border-border/60">
                 <CardContent className="p-8">
                     <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg flex items-center justify-center mb-4">
@@ -172,7 +186,6 @@ export default function LandingPage() {
                 </CardContent>
             </Card>
 
-            {/* Feature 4 (Big) */}
             <Card className="md:col-span-2 bg-card hover:bg-muted/50 transition-colors border-border/60">
                 <CardContent className="p-8 flex flex-col md:flex-row items-center gap-6">
                     <div>
@@ -242,7 +255,6 @@ export default function LandingPage() {
 
       {/* --- CTA BOTTOM --- */}
       <section className="py-20 bg-primary text-primary-foreground text-center px-6 relative overflow-hidden">
-          {/* Background decoration */}
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           
           <div className="relative z-10">
@@ -250,7 +262,6 @@ export default function LandingPage() {
             <p className="text-lg md:text-xl opacity-90 mb-10 max-w-2xl mx-auto text-primary-foreground/80">
                 দেরি না করে জয়েন করুন বাংলাদেশের সবচেয়ে স্মার্ট পার্সোনাল ফাইন্যান্স প্ল্যাটফর্মে।
             </p>
-            {/* LINK TO REGISTER PAGE */}
             <Link href="/register">
                 <Button 
                     size="lg" 
