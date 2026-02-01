@@ -32,8 +32,8 @@ const AddTransactionForm = ({ userId, onTransactionAdded }) => {
     }
 
     // FIX: Extract specific fields from the nested backend response
-    // Backend structure: response.data.parsedData = { amount, category, description, type... }
-    const { amount, category, description, type } = response.data.parsedData;
+    // Backend structure: response.data.parsedData = { amount, category, description, type, relatedPerson... }
+    const { amount, category, description, type, relatedPerson } = response.data.parsedData;
 
     // Create a flat object that matches our form structure
     const mappedData = {
@@ -42,7 +42,8 @@ const AddTransactionForm = ({ userId, onTransactionAdded }) => {
       amount: amount || '',
       description: description || '',
       category: category || '',
-      relatedPerson: '' // Backend doesn't extract name yet, so leave blank for manual edit
+      // FIX: Now mapping the name received from backend
+      relatedPerson: relatedPerson || '' 
     };
 
     // Success: Show Confirmation Overlay with the mapped data
@@ -79,8 +80,8 @@ const AddTransactionForm = ({ userId, onTransactionAdded }) => {
     };
 
     try {
-    //  await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions`, finalData);
-	  await axios.post('/api/transactions', finalData);
+      // FIX: Used relative path for Vercel/Localhost compatibility
+      await axios.post('/api/transactions', finalData);
       setForm({ type: 'EXPENSE', amount: '', relatedPerson: '', description: '', category: '' });
       setPendingData(null); 
       setErrorMessage("");

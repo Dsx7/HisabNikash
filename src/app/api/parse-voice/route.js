@@ -1,68 +1,176 @@
 import { NextResponse } from 'next/server';
 
+// ১. বাংলা কথায় লেখা সংখ্যা এবং ডিজিট কনভার্ট করার ডিকশনারি
+const wordToNumberMap = {
+  'এক': 1, 'দুই': 2, 'দু': 2, 'তিন': 3, 'চার': 4, 'পাঁচ': 5, 'ছয়': 6, 'সাত': 7, 'আট': 8, 'নয়': 9, 'দশ': 10,
+  'এগারো': 11, 'বারো': 12, 'তেরো': 13, 'চৌদ্দ': 14, 'পনেরো': 15, 'ষোল': 16, 'সতেরো': 17, 'আঠারো': 18, 'উনিশ': 19, 'বিশ': 20,
+  'ত্রিশ': 30, 'চলিশ': 40, 'পঞ্চাশ': 50, 'ষাট': 60, 'সত্তর': 70, 'আশি': 80, 'নব্বই': 90,
+  // Multipliers
+  'শ': 100, 'শত': 100, 'একশ': 100, 'দুইশ': 200, 'পাঁচশ': 500, 
+  'হাজার': 1000,
+  // বাংলা ডিজিট
+  '০': 0, '১': 1, '২': 2, '৩': 3, '৪': 4, '৫': 5, '৬': 6, '৭': 7, '৮': 8, '৯': 9
+};
+
+// স্ট্রিং থেকে সংখ্যা বের করার ফাংশন (FIXED for Multipliers)
+function extractAmount(text) {
+  let amount = 0;
+  
+  // ধাপ ১: বাংলা ডিজিট থাকলে ইংরেজিতে কনভার্ট করা
+  let processedText = text.replace(/[০-৯]/g, (d) => wordToNumberMap[d]);
+
+  // ধাপ ২: কথায় লেখা সংখ্যা চেক করা (With Multiplier Logic)
+  const words = processedText.split(/\s+/);
+  
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const val = wordToNumberMap[word];
+
+    if (val) {
+        // লজিক: যদি শব্দটি 'হাজার' বা 'শ' হয়
+        if (val === 1000 || val === 100) {
+            // চেক করি এর আগের শব্দটি কোনো সংখ্যা ছিল কিনা (যেমন: "দুই" হাজার)
+            const prevWord = words[i-1];
+            const prevVal = wordToNumberMap[prevWord];
+
+            if (prevVal && prevVal < 100) {
+                // গুণ হবে: 2 * 1000 = 2000
+                const calculated = prevVal * val;
+                if (calculated > amount) amount = calculated;
+            } else {
+                // যদি আগে সংখ্যা না থাকে (যেমন শুধু বলল "হাজার টাকা"), তবে ডিফল্ট মান
+                if (val > amount) amount = val;
+            }
+        } 
+        // যদি এটি সাধারণ সংখ্যা হয় (১-৯৯) এবং এর পরে কোনো মাল্টিপ্লায়ার না থাকে
+        else {
+            // আমরা পরের শব্দটি চেক করব, যদি পরে 'হাজার' থাকে তাহলে এখন আপডেট করব না
+            const nextWord = words[i+1];
+            const nextVal = wordToNumberMap[nextWord];
+            
+            if (nextVal !== 100 && nextVal !== 1000) {
+                if (val > amount) amount = val;
+            }
+        }
+    }
+  }
+
+  // ধাপ ৩: যদি টেক্সটে সরাসরি ইংরেজি ডিজিট (যেমন 2000) থাকে, সেটা সবার উপরে
+  const digitMatch = processedText.match(/(\d+)/);
+  if (digitMatch) {
+    amount = parseInt(digitMatch[0]);
+  }
+
+  return amount;
+}
+
 export async function POST(req) {
   try {
-    // 1. Parse the incoming form data
-    // This handles the 'application/x-www-form-urlencoded' sent by your frontend
     const formData = await req.formData();
-    
-    // 2. Extract the text
     const text = formData.get('text');
-    const file = formData.get('file'); // Kept for future flexibility if you upload files later
 
-    // 3. Validate Input
-    if (!text && !file) {
-      return NextResponse.json(
-        { success: false, error: "No text or audio file found" },
-        { status: 400 }
-      );
+    if (!text) {
+      return NextResponse.json({ success: false, error: "No text found" }, { status: 400 });
     }
 
-    // 4. Determine the input string
-    let inputString = text;
+    console.log("Processing Text:", text);
 
-    if (!inputString && file) {
-      // If you eventually decide to support file uploads again, 
-      // you would add your Whisper API logic here.
-      return NextResponse.json(
-        { success: false, error: "Audio file processing is not enabled yet. Please send text." },
-        { status: 501 }
-      );
-    }
+    // ১. টাকার পরিমাণ বের করা
+    const amount = extractAmount(text);
 
-    console.log("Server received text:", inputString);
-
-    // 5. PARSE THE TEXT (Simulated AI Logic)
-    // In a real production app, you would send 'inputString' to OpenAI/Gemini here.
-    // For now, we use basic Javascript to parse "500 টাকার বাজার" so it works immediately.
-
-    // Extract Number (Amount)
-    const amountMatch = inputString.match(/[0-9٠-٩]+/); // Matches English or Bengali digits
-    const amount = amountMatch ? parseInt(amountMatch[0]) : 0;
-
-    // Extract Category (Simple keyword matching)
-    let category = "Uncategorized";
-    const lowerText = inputString.toLowerCase();
+    // ২. ক্যাটাগরি এবং টাইপ নির্ণয়
+    let type = 'EXPENSE'; 
+    let category = 'Uncategorized';
     
-    if (lowerText.includes("বাজার") || lowerText.includes("shop") || lowerText.includes("buy")) {
-      category = "Shopping";
-    } else if (lowerText.includes("ভাড়া") || lowerText.includes("fare") || lowerText.includes("rickshaw")) {
-      category = "Transport";
-    } else if (lowerText.includes("খাবার") || lowerText.includes("food")) {
-      category = "Food";
+    const lowerText = text.toLowerCase();
+
+    // --- KEYWORD LOGIC ---
+    
+    // LEND
+    if (
+        lowerText.includes('পাব') ||    
+        lowerText.includes('পাবো') || 
+        lowerText.includes('দেবে') || 
+        lowerText.includes('ধার দিয়েছি') || 
+        lowerText.includes('দিয়েছি')
+    ) {
+      type = 'LEND';
+      category = 'Loan Given';
+    }
+    
+    // BORROW
+    else if (
+        lowerText.includes('নিব') || 
+        lowerText.includes('দিতে হবে') || 
+        lowerText.includes('দেবো') || 
+        lowerText.includes('ধার নিয়েছি') || 
+        lowerText.includes('পাবে') || 
+        lowerText.includes('ধার')
+    ) {
+      type = 'BORROW';
+      category = 'Loan Taken';
+    }
+    
+    // INCOME
+    else if (lowerText.includes('পেলাম') || lowerText.includes('আয়') || lowerText.includes('বেতন') || lowerText.includes('income')) {
+      type = 'INCOME';
+      category = 'Salary/Income';
+    }
+    
+    // EXPENSE
+    else if (lowerText.includes('বাজার') || lowerText.includes('buy') || lowerText.includes('shop') || lowerText.includes('kinlam')) {
+      type = 'EXPENSE';
+      category = 'Shopping';
+    } 
+    else if (lowerText.includes('ভাড়া') || lowerText.includes('rickshaw')) {
+      type = 'EXPENSE';
+      category = 'Transport';
+    }
+    else if (lowerText.includes('খেলাম') || lowerText.includes('খাবার')) {
+      type = 'EXPENSE';
+      category = 'Food';
     }
 
-    // 6. Return the structured data
+    // ৩. নাম বের করা
+    const excludeWords = [
+        'আমি', 'আমার', 'আমাকে', 'আমরা', 
+        'তুমি', 'তোমার', 'তোমাকে', 
+        'সে', 'তার', 'তাকে', 
+        'থেকে', 'কাছে', 'সাথে', 'জন্য', 
+        'টাকা', 'পয়সা', 
+        'দেবে', 'নিব', 'পাবো', 'পাব', 'পাবে', 'করলাম', 'দিতে', 'হবে', 'নিয়েছি', 'দিয়েছে', 'নিয়েছে', 'দেবো',
+        'বিশ', 'দশ', 'পঞ্চাশ', 'শ', 'হাজার', 'লাখ',
+        'এর', 'টি', 'টা', 'খানা', 'খানি' 
+    ];
+
+    const words = text.split(/\s+/);
+    let relatedPerson = '';
+
+    for (let word of words) {
+        const cleanWord = word.replace(/[^\u0980-\u09FFa-zA-Z]/g, ''); 
+
+        if (
+            cleanWord.length > 1 && 
+            !wordToNumberMap[cleanWord] && 
+            !cleanWord.match(/[0-9০-৯]/) && 
+            !excludeWords.includes(cleanWord)
+        ) {
+            relatedPerson = cleanWord;
+            break; 
+        }
+    }
+
     return NextResponse.json({
       success: true,
       data: {
-        originalText: inputString,
+        originalText: text,
         parsedData: {
           amount: amount,
+          type: type,
           category: category,
-          description: inputString,
-          date: new Date().toISOString(),
-          type: 'expense' // Default assumption
+          relatedPerson: relatedPerson, 
+          description: text,
+          date: new Date().toISOString()
         }
       }
     });
