@@ -19,7 +19,8 @@ export const AuthProvider = ({ children }) => {
     // Sync with MongoDB
     const syncUserWithBackend = async (firebaseUser) => {
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/sync`, {
+           // const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/sync`, {
+			   const res = await axios.post('/api/users/sync', {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
                 displayName: firebaseUser.displayName,

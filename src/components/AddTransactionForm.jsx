@@ -79,7 +79,8 @@ const AddTransactionForm = ({ userId, onTransactionAdded }) => {
     };
 
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions`, finalData);
+    //  await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions`, finalData);
+	  await axios.post('/api/transactions', finalData);
       setForm({ type: 'EXPENSE', amount: '', relatedPerson: '', description: '', category: '' });
       setPendingData(null); 
       setErrorMessage("");

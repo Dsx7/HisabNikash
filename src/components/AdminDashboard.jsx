@@ -15,8 +15,10 @@ export default function AdminDashboard() {
     }, []);
 
     const fetchData = async () => {
-        const userRes = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/all`);
-        const statRes = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/stats`);
+      {/*  const userRes = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/all`);
+        const statRes = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/stats`); */}
+		const userRes = await axios.get('/api/users/all');
+		const statRes = await axios.get('/api/users/stats');
         setUsers(userRes.data);
         setStats(statRes.data);
     };

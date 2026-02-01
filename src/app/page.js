@@ -25,7 +25,8 @@ export default function Home() {
   const fetchTransactions = async () => {
     if (!user) return;
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions?userId=${user.uid}`);
+      // const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions?userId=${user.uid}`);
+	  const res = await axios.get(`/api/transactions?userId=${user.uid}`);
       setTransactions(res.data);
     } catch (error) {
       console.error("Error fetching transactions", error);

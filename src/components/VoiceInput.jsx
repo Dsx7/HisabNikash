@@ -40,7 +40,8 @@ const VoiceInput = ({ onDataReceived }) => {
       params.append('text', text);
 
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/parse-voice`, 
+      //  `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/parse-voice`, 
+		'/api/parse-voice',
         params
       );
       

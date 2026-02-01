@@ -35,7 +35,8 @@ const VoiceParser = ({ onDataReceived }) => {
     setLoading(true);
     try {
       // Backend call
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/parse-voice`, { text });
+     // const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/parse-voice`, { text });
+	  const res = await axios.post('/api/parse-voice', { text });
       onDataReceived(res.data);
     } catch (err) {
       console.error(err);

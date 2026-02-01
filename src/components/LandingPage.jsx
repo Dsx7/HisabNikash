@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -256,11 +257,13 @@ export default function LandingPage({ onLogin }) {
       {/* --- FOOTER --- */}
       <footer className="py-10 bg-background border-t border-border/50 text-center text-sm text-muted-foreground">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>&copy; 2024 HisabNikash. Built with ❤️ in Bangladesh.</p>
+            <p>&copy; 2026 HisabNikash. Built with ❤️ in Bangladesh.</p>
             <div className="flex gap-6">
-                <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-                <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
-                <a href="#" className="hover:text-primary transition-colors">Contact</a>
+                <Link href="/privacy" className="hover:underline hover:text-primary">Privacy Policy</Link>
+  <span>•</span>
+  <Link href="/terms" className="hover:underline hover:text-primary">Terms</Link>
+  <span>•</span>
+  <Link href="/contact" className="hover:underline hover:text-primary">Contact</Link>
             </div>
         </div>
       </footer>

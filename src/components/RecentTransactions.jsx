@@ -115,7 +115,8 @@ const RecentTransactions = ({ transactions, onUpdate }) => {
     if (!confirmTx) return;
     try {
         setIsProcessing(true);
-        await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions/${confirmTx._id}/settle`);
+       // await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions/${confirmTx._id}/settle`);
+	   await axios.patch(`/api/transactions/${confirmTx._id}/settle`);
         if (onUpdate) onUpdate();
         setConfirmTx(null);
     } catch (error) {
