@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Wallet, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, PieChart as PieIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import HNLoader from '@/components/HNLoader';
 
 // --- STAT CARD COMPONENT (No Change) ---
 const StatCard = ({ title, value, type, icon: Icon }) => {
@@ -35,17 +36,54 @@ const StatCard = ({ title, value, type, icon: Icon }) => {
 // --- CHART COLORS ---
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28BBF', '#FF6666'];
 
-const Dashboard = ({ transactions }) => {
+const Dashboard = ({ transactions, isLoading }) => {
   
-  // 1. Calculate Stats
-  const totalIncome = transactions.filter(t => t.type === 'INCOME').reduce((acc, t) => acc + t.amount, 0);
-  const totalExpense = transactions.filter(t => t.type === 'EXPENSE').reduce((acc, t) => acc + t.amount, 0);
-  const totalPabo = transactions.filter(t => t.type === 'LEND' && !t.isSettled).reduce((acc, t) => acc + t.amount, 0);
-  const totalDibo = transactions.filter(t => t.type === 'BORROW' && !t.isSettled).reduce((acc, t) => acc + t.amount, 0);
-  const balance = totalIncome - totalExpense;
+  // 0. Show HN Loader if data is loading
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+         <HNLoader size="text-6xl" />
+      </div>
+    );
+  }
 
-  // 2. Prepare Data for Pie Chart (Group Expenses by Category)
-  const expenseByCategory = transactions
+  // Handle empty or undefined transactions gracefully
+  const safeTransactions = transactions || [];
+
+  // --- 1. CALCULATE TOTALS ---
+  const totalIncome = safeTransactions
+    .filter(t => t.type === 'INCOME')
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const totalExpense = safeTransactions
+    .filter(t => t.type === 'EXPENSE')
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  // Active Borrow (যে টাকা নিয়েছি এবং এখনো শোধ করিনি -> ব্যালেন্স বাড়াবে)
+  const activeBorrow = safeTransactions
+    .filter(t => t.type === 'BORROW' && !t.isSettled)
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  // Active Lend (যে টাকা ধার দিয়েছি এবং এখনো ফেরত পাইনি -> ব্যালেন্স কমাবে)
+  const activeLend = safeTransactions
+    .filter(t => t.type === 'LEND' && !t.isSettled)
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  // Total Payable (মানুষ পাবে)
+  const totalDibo = activeBorrow; 
+
+  // Total Receivable (আমি পাব)
+  const totalPabo = activeLend;
+
+  // --- 2. LOGIC UPDATED: BALANCE CALCULATION ---
+  // ব্যালেন্স = (মোট আয় + বর্তমান ঋণ) - (মোট খরচ + বর্তমান পাওনা)
+  // ব্যাখ্যা: 
+  // - Borrow Settle করলে activeBorrow কমে যাবে -> ব্যালেন্স কমবে (পকেট থেকে টাকা যাবে)।
+  // - Lend Settle করলে activeLend কমে যাবে -> ব্যালেন্স বাড়বে (পকেটে টাকা আসবে)।
+  const balance = (totalIncome + activeBorrow) - (totalExpense + activeLend);
+
+  // --- 3. PIE CHART DATA ---
+  const expenseByCategory = safeTransactions
     .filter(t => t.type === 'EXPENSE')
     .reduce((acc, t) => {
         const cat = t.category || 'General';
@@ -59,7 +97,7 @@ const Dashboard = ({ transactions }) => {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in zoom-in duration-500">
       
       {/* --- TOP STATS --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -112,7 +150,7 @@ const Dashboard = ({ transactions }) => {
               </CardContent>
           </Card>
 
-          {/* Optional: Simple Summary List */}
+          {/* Summary List */}
           <Card className="shadow-sm border-border bg-card">
               <CardHeader>
                   <CardTitle className="text-lg">Masher Summary</CardTitle>
@@ -126,17 +164,26 @@ const Dashboard = ({ transactions }) => {
                       <span className="font-medium text-rose-800 dark:text-rose-400">Total Expense</span>
                       <span className="font-bold text-rose-700 dark:text-rose-300">-৳{totalExpense.toLocaleString()}</span>
                   </div>
+                  
+                  {/* Optional: Active Loan Status */}
+                   <div className="flex justify-between items-center p-3 bg-blue-100/50 dark:bg-blue-900/20 rounded-lg">
+                      <span className="font-medium text-blue-800 dark:text-blue-400">Net Active Loans</span>
+                      <span className="font-bold text-blue-700 dark:text-blue-300">
+                        {activeBorrow - activeLend > 0 ? `+৳${(activeBorrow - activeLend).toLocaleString()}` : `-৳${Math.abs(activeBorrow - activeLend).toLocaleString()}`}
+                      </span>
+                  </div>
+
                   <div className="border-t pt-4 mt-2">
                       <div className="flex justify-between items-center">
                           <span className="text-sm text-muted-foreground">Savings Rate</span>
                           <span className="font-bold text-primary">
-                             {totalIncome > 0 ? ((balance / totalIncome) * 100).toFixed(1) : 0}%
+                             {totalIncome > 0 ? ((balance / (totalIncome + activeBorrow)) * 100).toFixed(1) : 0}%
                           </span>
                       </div>
                       <div className="w-full bg-secondary h-2 rounded-full mt-2 overflow-hidden">
                           <div 
                             className="bg-primary h-full rounded-full transition-all duration-500" 
-                            style={{ width: `${totalIncome > 0 ? ((balance / totalIncome) * 100) : 0}%` }}
+                            style={{ width: `${totalIncome > 0 ? ((balance / (totalIncome + activeBorrow)) * 100) : 0}%` }}
                           />
                       </div>
                   </div>
