@@ -1,9 +1,25 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wallet, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, PieChart as PieIcon } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { 
+    Wallet, 
+    TrendingUp, 
+    TrendingDown, 
+    ArrowUpRight, 
+    ArrowDownLeft, 
+    PieChart as PieIcon,
+    HelpCircle // <--- Tooltip Icon
+} from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import HNLoader from '@/components/HNLoader';
+
+// --- SHADCN TOOLTIP IMPORTS ---
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // --- STAT CARD COMPONENT (No Change) ---
 const StatCard = ({ title, value, type, icon: Icon }) => {
@@ -42,7 +58,7 @@ const Dashboard = ({ transactions, isLoading }) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
-         <HNLoader size="text-6xl" />
+         <HNLoader size="h-32 w-64" /> {/* Adjusted size for better visibility */}
       </div>
     );
   }
@@ -77,9 +93,6 @@ const Dashboard = ({ transactions, isLoading }) => {
 
   // --- 2. LOGIC UPDATED: BALANCE CALCULATION ---
   // ব্যালেন্স = (মোট আয় + বর্তমান ঋণ) - (মোট খরচ + বর্তমান পাওনা)
-  // ব্যাখ্যা: 
-  // - Borrow Settle করলে activeBorrow কমে যাবে -> ব্যালেন্স কমবে (পকেট থেকে টাকা যাবে)।
-  // - Lend Settle করলে activeLend কমে যাবে -> ব্যালেন্স বাড়বে (পকেটে টাকা আসবে)।
   const balance = (totalIncome + activeBorrow) - (totalExpense + activeLend);
 
   // --- 3. PIE CHART DATA ---
@@ -135,7 +148,7 @@ const Dashboard = ({ transactions, isLoading }) => {
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
-                            <Tooltip 
+                            <RechartsTooltip 
                                 contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)', borderRadius: '8px' }}
                                 itemStyle={{ color: 'var(--foreground)' }}
                             />
@@ -165,9 +178,30 @@ const Dashboard = ({ transactions, isLoading }) => {
                       <span className="font-bold text-rose-700 dark:text-rose-300">-৳{totalExpense.toLocaleString()}</span>
                   </div>
                   
-                  {/* Optional: Active Loan Status */}
+                  {/* --- NET ACTIVE LOANS WITH TOOLTIP --- */}
                    <div className="flex justify-between items-center p-3 bg-blue-100/50 dark:bg-blue-900/20 rounded-lg">
-                      <span className="font-medium text-blue-800 dark:text-blue-400">Net Active Loans</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-blue-800 dark:text-blue-400">Net Active Loans</span>
+                        
+                        {/* TOOLTIP START */}
+                        <TooltipProvider>
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="w-4 h-4 text-blue-600/70 dark:text-blue-400/70 cursor-help hover:text-blue-800 dark:hover:text-blue-200 transition-colors" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-[250px] p-3 text-xs bg-popover text-popover-foreground border border-border shadow-xl">
+                              <p className="font-semibold mb-1">Net Active Loans Calculation:</p>
+                              <p>(Active Borrow) - (Active Lend)</p>
+                              <p className="mt-2 text-muted-foreground">
+                                • <strong>Positive (+):</strong> You owe more money than people owe you (Debt).<br/>
+                                • <strong>Negative (-):</strong> People owe you more money (Credit).
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        {/* TOOLTIP END */}
+
+                      </div>
                       <span className="font-bold text-blue-700 dark:text-blue-300">
                         {activeBorrow - activeLend > 0 ? `+৳${(activeBorrow - activeLend).toLocaleString()}` : `-৳${Math.abs(activeBorrow - activeLend).toLocaleString()}`}
                       </span>
