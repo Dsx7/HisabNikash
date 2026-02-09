@@ -8,7 +8,7 @@ import {
     ArrowUpRight, 
     ArrowDownLeft, 
     PieChart as PieIcon,
-    HelpCircle // <--- Tooltip Icon
+    HelpCircle 
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import HNLoader from '@/components/HNLoader';
@@ -58,7 +58,7 @@ const Dashboard = ({ transactions, isLoading }) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
-         <HNLoader size="h-32 w-64" /> {/* Adjusted size for better visibility */}
+         <HNLoader size="h-32 w-64" /> 
       </div>
     );
   }
@@ -75,24 +75,20 @@ const Dashboard = ({ transactions, isLoading }) => {
     .filter(t => t.type === 'EXPENSE')
     .reduce((acc, t) => acc + t.amount, 0);
 
-  // Active Borrow (যে টাকা নিয়েছি এবং এখনো শোধ করিনি -> ব্যালেন্স বাড়াবে)
+  // Active Borrow
   const activeBorrow = safeTransactions
     .filter(t => t.type === 'BORROW' && !t.isSettled)
     .reduce((acc, t) => acc + t.amount, 0);
 
-  // Active Lend (যে টাকা ধার দিয়েছি এবং এখনো ফেরত পাইনি -> ব্যালেন্স কমাবে)
+  // Active Lend
   const activeLend = safeTransactions
     .filter(t => t.type === 'LEND' && !t.isSettled)
     .reduce((acc, t) => acc + t.amount, 0);
 
-  // Total Payable (মানুষ পাবে)
   const totalDibo = activeBorrow; 
-
-  // Total Receivable (আমি পাব)
   const totalPabo = activeLend;
 
-  // --- 2. LOGIC UPDATED: BALANCE CALCULATION ---
-  // ব্যালেন্স = (মোট আয় + বর্তমান ঋণ) - (মোট খরচ + বর্তমান পাওনা)
+  // --- 2. BALANCE CALCULATION ---
   const balance = (totalIncome + activeBorrow) - (totalExpense + activeLend);
 
   // --- 3. PIE CHART DATA ---
@@ -178,7 +174,7 @@ const Dashboard = ({ transactions, isLoading }) => {
                       <span className="font-bold text-rose-700 dark:text-rose-300">-৳{totalExpense.toLocaleString()}</span>
                   </div>
                   
-                  {/* --- NET ACTIVE LOANS WITH TOOLTIP --- */}
+                  {/* --- NET ACTIVE LOANS WITH MOBILE CLICK FIX --- */}
                    <div className="flex justify-between items-center p-3 bg-blue-100/50 dark:bg-blue-900/20 rounded-lg">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-blue-800 dark:text-blue-400">Net Active Loans</span>
@@ -186,10 +182,14 @@ const Dashboard = ({ transactions, isLoading }) => {
                         {/* TOOLTIP START */}
                         <TooltipProvider>
                           <Tooltip delayDuration={0}>
+                            {/* FIX: Wrapped icon in a button to support mobile tap/focus */}
                             <TooltipTrigger asChild>
-                              <HelpCircle className="w-4 h-4 text-blue-600/70 dark:text-blue-400/70 cursor-help hover:text-blue-800 dark:hover:text-blue-200 transition-colors" />
+                              <button type="button" className="bg-transparent border-0 p-0 focus:outline-none cursor-help">
+                                <HelpCircle className="w-4 h-4 text-blue-600/70 dark:text-blue-400/70 hover:text-blue-800 dark:hover:text-blue-200 transition-colors" />
+                                <span className="sr-only">Info</span>
+                              </button>
                             </TooltipTrigger>
-                            <TooltipContent className="max-w-[250px] p-3 text-xs bg-popover text-popover-foreground border border-border shadow-xl">
+                            <TooltipContent className="max-w-[250px] p-3 text-xs bg-popover text-popover-foreground border border-border shadow-xl z-50">
                               <p className="font-semibold mb-1">Net Active Loans Calculation:</p>
                               <p>(Active Borrow) - (Active Lend)</p>
                               <p className="mt-2 text-muted-foreground">
