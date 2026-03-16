@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { 
   ShoppingBag, 
@@ -14,7 +14,8 @@ import {
   X,
   AlertTriangle,
   Search,
-  Download
+  Download,
+  Loader2 // New icon for loading
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,7 +67,6 @@ const TransactionItem = ({ t, onSettleClick }) => {
               {new Date(t.date).toLocaleDateString()}
             </span>
 
-            {/* --- NEW: Show Settle Date if exists --- */}
             {t.isSettled && t.settledAt && (
                <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100/50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded border border-emerald-200/50">
                  <Check size={8} />
@@ -111,12 +111,15 @@ const RecentTransactions = ({ transactions, onUpdate }) => {
   const [confirmTx, setConfirmTx] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // --- NEW: SCROLL & PAGINATION STATES ---
+  const [visibleCount, setVisibleCount] = useState(8);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   const handleConfirmSettle = async () => {
     if (!confirmTx) return;
     try {
         setIsProcessing(true);
-       // await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions/${confirmTx._id}/settle`);
-	   await axios.patch(`/api/transactions/${confirmTx._id}/settle`);
+        await axios.patch(`/api/transactions/${confirmTx._id}/settle`);
         if (onUpdate) onUpdate();
         setConfirmTx(null);
     } catch (error) {
@@ -126,7 +129,7 @@ const RecentTransactions = ({ transactions, onUpdate }) => {
     }
   };
 
-  // --- FILTER & SORT ---
+  // --- FILTER & SORT LOGIC ---
   const filteredTransactions = transactions.filter((t) => {
     if (filterType !== 'ALL' && t.type !== filterType) return false;
     if (searchQuery) {
@@ -153,32 +156,47 @@ const RecentTransactions = ({ transactions, onUpdate }) => {
     }
   });
 
-  // --- EXPORT TO CSV FUNCTION ---
+  // --- INFINITE SCROLL LOGIC ---
+  const handleScroll = useCallback(() => {
+    if (window.innerHeight + document.documentElement.scrollTop + 50 >= document.documentElement.offsetHeight) {
+      if (visibleCount < sortedTransactions.length && !isLoadingMore) {
+        setIsLoadingMore(true);
+        // Delay for smooth feel
+        setTimeout(() => {
+          setVisibleCount(prev => prev + 8);
+          setIsLoadingMore(false);
+        }, 600);
+      }
+    }
+  }, [visibleCount, sortedTransactions.length, isLoadingMore]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(8);
+  }, [filterType, searchQuery, sortOrder]);
+
+  const currentVisibleTransactions = sortedTransactions.slice(0, visibleCount);
+
+  // --- EXPORT TO CSV (Keeping your logic) ---
   const handleExport = () => {
     if (sortedTransactions.length === 0) return;
-
-    // 1. Headers (Added Settled Date)
     const headers = ["Date", "Type", "Amount", "Person", "Category", "Description", "Status", "Settled Date"];
-
-    // 2. Data Rows
     const rows = sortedTransactions.map(t => [
         new Date(t.date).toLocaleDateString(),
         t.type,
         t.amount,
         t.relatedPerson || "-",
         t.category || "General",
-        `"${t.description || ""}"`, // Escape description
+        `"${t.description || ""}"`,
         t.isSettled ? "Settled" : "Active",
         t.settledAt ? new Date(t.settledAt).toLocaleDateString() : "-"
     ]);
-
-    // 3. Combine
-    const csvContent = [
-        headers.join(","),
-        ...rows.map(row => row.join(","))
-    ].join("\n");
-
-    // 4. Trigger Download
+    const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -192,11 +210,11 @@ const RecentTransactions = ({ transactions, onUpdate }) => {
   const selectStyle = "pl-8 pr-3 py-2 text-xs md:text-sm rounded-lg bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer hover:bg-muted/50 transition-colors appearance-none shadow-sm w-full md:w-auto";
 
   return (
-    <div className="mt-8 relative">
+    <div className="mt-8 relative pb-10">
         
       {/* --- POPUP OVERLAY --- */}
       {confirmTx && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-background border border-border rounded-xl p-6 shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-200">
                 <div className="flex flex-col items-center text-center">
                     <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
@@ -223,13 +241,9 @@ const RecentTransactions = ({ transactions, onUpdate }) => {
 
       {/* --- HEADER CONTROLS --- */}
       <div className="flex flex-col gap-4 mb-5">
-        
-        {/* Title & Actions Row */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <h3 className="text-lg font-bold text-foreground pl-1">History</h3>
-            
             <div className="flex gap-2 w-full md:w-auto">
-                {/* SEARCH BAR */}
                 <div className="relative flex-1 md:w-56">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
@@ -239,15 +253,12 @@ const RecentTransactions = ({ transactions, onUpdate }) => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
-                
-                {/* EXPORT BUTTON */}
-                <Button variant="outline" size="sm" className="h-9 px-3" onClick={handleExport} title="Download Excel/CSV">
+                <Button variant="outline" size="sm" className="h-9 px-3" onClick={handleExport} title="Download CSV">
                     <Download className="w-4 h-4" />
                 </Button>
             </div>
         </div>
 
-        {/* Filter & Sort Row */}
         <div className="flex gap-2 w-full">
             <div className="relative flex-1">
                 <Filter size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
@@ -272,11 +283,11 @@ const RecentTransactions = ({ transactions, onUpdate }) => {
         </div>
       </div>
 
-      {/* List */}
+      {/* --- TRANSACTION LIST --- */}
       <div className="space-y-2">
-        {sortedTransactions.length > 0 ? (
-            sortedTransactions.map((t) => (
-            <TransactionItem key={t._id} t={t} onSettleClick={setConfirmTx} />
+        {currentVisibleTransactions.length > 0 ? (
+            currentVisibleTransactions.map((t) => (
+              <TransactionItem key={t._id} t={t} onSettleClick={setConfirmTx} />
             ))
         ) : (
             <div className="text-center py-12 bg-muted/20 rounded-2xl border border-dashed border-border">
@@ -284,6 +295,21 @@ const RecentTransactions = ({ transactions, onUpdate }) => {
             </div>
         )}
       </div>
+
+      {/* --- LOAD MORE / LOADING STATE --- */}
+      {isLoadingMore && (
+        <div className="flex justify-center items-center py-6 gap-2 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          <span className="text-sm font-medium">Loading more...</span>
+        </div>
+      )}
+
+      {/* END OF LIST MESSAGE */}
+      {!isLoadingMore && visibleCount >= sortedTransactions.length && sortedTransactions.length > 0 && (
+        <div className="text-center py-6 opacity-40">
+           <p className="text-xs font-bold uppercase tracking-widest">End of History</p>
+        </div>
+      )}
     </div>
   );
 };

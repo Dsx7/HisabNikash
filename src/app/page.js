@@ -33,6 +33,17 @@ export default function Home() {
     }
   };
 
+  const handleDeleteTransaction = async (transactionId) => {
+    try {
+      // Assuming a DELETE API endpoint like /api/transactions/:id
+      await axios.delete(`/api/transactions/${transactionId}`);
+      fetchTransactions(); // Refresh the list after successful deletion
+    } catch (error) {
+      console.error("Error deleting transaction", error);
+      alert("Failed to delete transaction."); // User feedback for deletion failure
+    }
+  };
+
   // Fetch data when user logs in
   useEffect(() => {
     if (user) fetchTransactions();
@@ -120,10 +131,10 @@ export default function Home() {
                      
                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
                         <div className="lg:col-span-1">
-                            <AddTransactionForm userId={user.uid} onTransactionAdded={fetchTransactions} />
+                            <AddTransactionForm userId={user.uid} onTransactionAdded={fetchTransactions} /> 
                         </div>
                         <div className="lg:col-span-2">
-                            <RecentTransactions transactions={transactions} onUpdate={fetchTransactions} />
+                            <RecentTransactions transactions={transactions} onUpdate={fetchTransactions} onDelete={handleDeleteTransaction} />
                         </div>
                      </div>
                 </div>
@@ -139,7 +150,7 @@ export default function Home() {
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* 2. Add Transaction Form (Left/Top) */}
-                  <div className="lg:col-span-1 order-2 lg:order-1">
+                  <div className="lg:col-span-1">
                      <AddTransactionForm 
                         userId={user.uid} 
                         onTransactionAdded={fetchTransactions} 
@@ -147,7 +158,7 @@ export default function Home() {
                   </div>
                   
                   {/* 3. Transaction History (Right/Bottom) */}
-                  <div className="lg:col-span-2 order-1 lg:order-2">
+                  <div className="lg:col-span-2">
                     <RecentTransactions 
                         transactions={transactions} 
                         onUpdate={fetchTransactions} // Pass refresh function here
