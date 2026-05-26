@@ -52,7 +52,7 @@ const StatCard = ({ title, value, type, icon: Icon }) => {
 // --- CHART COLORS ---
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28BBF', '#FF6666'];
 
-const Dashboard = ({ transactions, isLoading }) => {
+const Dashboard = ({ transactions, isLoading, selectedMonth, selectedYear }) => {
   
   // 0. Show HN Loader if data is loading
   if (isLoading) {
@@ -65,6 +65,27 @@ const Dashboard = ({ transactions, isLoading }) => {
 
   // Handle empty or undefined transactions gracefully
   const safeTransactions = transactions || [];
+
+  // --- MONTHLY SUMMARY (MASHER) CALCULATIONS ---
+  // Default to current month/year if props are not provided
+  const currentMonth = selectedMonth !== undefined ? selectedMonth - 1 : new Date().getMonth();
+  const currentYear = selectedYear !== undefined ? selectedYear : new Date().getFullYear();
+
+  const currentMonthTransactions = safeTransactions.filter(t => {
+      const date = new Date(t.date);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  });
+
+  const monthlyIncome = currentMonthTransactions
+    .filter(t => t.type === 'INCOME')
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const monthlyExpense = currentMonthTransactions
+    .filter(t => t.type === 'EXPENSE')
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const monthlySavings = monthlyIncome - monthlyExpense;
+  const monthlySavingsRate = monthlyIncome > 0 ? Math.max(0, (monthlySavings / monthlyIncome) * 100).toFixed(1) : 0;
 
   // --- 1. CALCULATE TOTALS ---
   const totalIncome = safeTransactions
@@ -92,7 +113,7 @@ const Dashboard = ({ transactions, isLoading }) => {
   const balance = (totalIncome + activeBorrow) - (totalExpense + activeLend);
 
   // --- 3. PIE CHART DATA ---
-  const expenseByCategory = safeTransactions
+  const expenseByCategory = currentMonthTransactions
     .filter(t => t.type === 'EXPENSE')
     .reduce((acc, t) => {
         const cat = t.category || 'General';
@@ -166,12 +187,12 @@ const Dashboard = ({ transactions, isLoading }) => {
               </CardHeader>
               <CardContent className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-emerald-100/50 dark:bg-emerald-900/20 rounded-lg">
-                      <span className="font-medium text-emerald-800 dark:text-emerald-400">Total Income</span>
-                      <span className="font-bold text-emerald-700 dark:text-emerald-300">+৳{totalIncome.toLocaleString()}</span>
+                      <span className="font-medium text-emerald-800 dark:text-emerald-400">Monthly Income</span>
+                      <span className="font-bold text-emerald-700 dark:text-emerald-300">+৳{monthlyIncome.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-rose-100/50 dark:bg-rose-900/20 rounded-lg">
-                      <span className="font-medium text-rose-800 dark:text-rose-400">Total Expense</span>
-                      <span className="font-bold text-rose-700 dark:text-rose-300">-৳{totalExpense.toLocaleString()}</span>
+                      <span className="font-medium text-rose-800 dark:text-rose-400">Monthly Expense</span>
+                      <span className="font-bold text-rose-700 dark:text-rose-300">-৳{monthlyExpense.toLocaleString()}</span>
                   </div>
                   
                   {/* --- NET ACTIVE LOANS WITH MOBILE CLICK FIX --- */}
@@ -209,15 +230,15 @@ const Dashboard = ({ transactions, isLoading }) => {
 
                   <div className="border-t pt-4 mt-2">
                       <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Savings Rate</span>
+                          <span className="text-sm text-muted-foreground">Monthly Savings Rate</span>
                           <span className="font-bold text-primary">
-                             {totalIncome > 0 ? ((balance / (totalIncome + activeBorrow)) * 100).toFixed(1) : 0}%
+                             {monthlySavingsRate}%     
                           </span>
                       </div>
                       <div className="w-full bg-secondary h-2 rounded-full mt-2 overflow-hidden">
                           <div 
-                            className="bg-primary h-full rounded-full transition-all duration-500" 
-                            style={{ width: `${totalIncome > 0 ? ((balance / (totalIncome + activeBorrow)) * 100) : 0}%` }}
+                            className="bg-primary h-full rounded-full transition-all duration-500"
+                            style={{ width: `${monthlySavingsRate}%` }}
                           />
                       </div>
                   </div>

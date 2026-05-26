@@ -96,8 +96,6 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: "No text found" }, { status: 400 });
     }
 
-    console.log("Processing Text:", text);
-
     // ১. টাকার পরিমাণ বের করা
     const amount = extractAmount(text);
 

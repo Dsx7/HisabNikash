@@ -246,13 +246,12 @@ const RecentTransactions = ({ transactions, onUpdate }) => {
             <div className="flex gap-2 w-full md:w-auto">
                 <div className="relative flex-1 md:w-56">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                        placeholder="Search..." 
+                    <Input
+                        placeholder="Search name, store, or price..."
                         className="pl-9 h-9 bg-background"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
+                    />                </div>
                 <Button variant="outline" size="sm" className="h-9 px-3" onClick={handleExport} title="Download CSV">
                     <Download className="w-4 h-4" />
                 </Button>
