@@ -10,7 +10,10 @@ import {
     Search,
     User,
     ChevronRight,
-    ChevronDown
+    ChevronDown,
+    AlertTriangle,
+    X,
+    Check
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +25,7 @@ const DebtManagement = ({ transactions, onUpdate }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedPerson, setExpandedPerson] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [confirmTx, setConfirmTx] = useState(null);
 
     // --- 1. Filter and Group Data ---
     const debtData = useMemo(() => {
@@ -59,10 +63,12 @@ const DebtManagement = ({ transactions, onUpdate }) => {
     const totalReceivable = debtData.reduce((acc, p) => acc + p.totalLend, 0);
     const totalPayable = debtData.reduce((acc, p) => acc + p.totalBorrow, 0);
 
-    const handleSettle = async (txId) => {
+    const handleConfirmSettle = async () => {
+        if (!confirmTx) return;
         try {
             setIsProcessing(true);
-            await axios.patch(`/api/transactions/${txId}/settle`);
+            await axios.patch(`/api/transactions/${confirmTx._id}/settle`);
+            setConfirmTx(null);
             if (onUpdate) onUpdate();
         } catch (error) {
             console.error("Failed to settle", error);
@@ -73,6 +79,33 @@ const DebtManagement = ({ transactions, onUpdate }) => {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
+            
+            {/* --- CONFIRMATION MODAL --- */}
+            {confirmTx && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-background border border-border rounded-xl p-6 shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-200">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                                <AlertTriangle className="text-primary w-6 h-6" />
+                            </div>
+                            <h3 className="text-lg font-bold mb-2">
+                                {confirmTx.type === 'LEND' ? 'Taka Bujhe Peyecehen?' : 'Taka Shodh Korechen?'}
+                            </h3>
+                            <p className="text-muted-foreground text-sm mb-6">
+                                Confirm settlement for <span className="font-bold text-foreground">{confirmTx.relatedPerson}</span> (৳{confirmTx.amount})?
+                            </p>
+                            <div className="flex gap-3 w-full">
+                                <Button variant="outline" className="flex-1" onClick={() => setConfirmTx(null)} disabled={isProcessing}>
+                                    <X className="w-4 h-4 mr-2" /> Cancel
+                                </Button>
+                                <Button className="flex-1" onClick={handleConfirmSettle} disabled={isProcessing}>
+                                    {isProcessing ? "Updating..." : <><Check className="w-4 h-4 mr-2" /> Confirm</>}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             
             {/* --- HEADER --- */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
